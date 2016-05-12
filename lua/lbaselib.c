@@ -672,17 +672,13 @@ static int ll_require (lua_State *L) {
     lua_getfield(L, LUA_ENVIRONINDEX, "loaders");
     if (!lua_istable(L, -1))
       luaL_error(L, LUA_QL("require.loaders") " must be a table");
-    lua_getfield(L, LUA_ENVIRONINDEX, "path");
-    if (!lua_istable(L, -1))
-      luaL_error(L, LUA_QL("require.path") " must be a table");
     lua_pushstring(L, name);
     for (i = 1; ; ++i) {
       lua_rawgeti(L, -3, i);  /* get a loader */
       if (lua_isnil(L, -1))
         luaL_error(L, "module " LUA_QS " not found", name);
       lua_pushvalue(L, -2);
-      lua_rawgeti(L, -4, i);  /* get loader path */
-      lua_call(L, 2, 1);  /* call it */
+      lua_call(L, 1, 1);  /* call it */
       if (lua_isfunction(L, -1))  /* did it find module? */
         break;  /* module loaded successfully */
       lua_pop(L, 1);
@@ -694,12 +690,18 @@ static int ll_require (lua_State *L) {
     luaL_error(L, "name conflict for module " LUA_QS, name);
   {
     const char *pdot = strchr(name, '.');
-    if (pdot == NULL) pdot = name;
-    lua_createtable(L, 0, 1);
-    lua_pushlstring(L, name, pdot - name);
-    if (luaL_findtable(L, LUA_GLOBALSINDEX, lua_tostring(L, -1), 0) != NULL)
-      luaL_error(L, "name conflict for module " LUA_QS, name);
-    lua_remove(L, -2);
+	lua_createtable(L, 0, 1);
+    if (pdot == NULL)
+    {
+      lua_pushvalue(L, LUA_GLOBALSINDEX);
+    }
+    else
+    {
+      lua_pushlstring(L, name, pdot - name);
+      if (luaL_findtable(L, LUA_GLOBALSINDEX, lua_tostring(L, -1), 0) != NULL)
+        luaL_error(L, "name conflict for module " LUA_QS, name);
+      lua_remove(L, -2);
+    }
     lua_pushcclosure(L, aux_require, 1);
     lua_setfield(L, -2, "__index");
     lua_setmetatable(L, -2);
