@@ -726,9 +726,9 @@ static int aux_require_call (lua_State *L) {
 }
 
 
-static const luaL_Reg loaders[] = {
-  {"./?.lua;./?.luac", loader_Fail},
-  {NULL, NULL}
+static const lua_CFunction loaders[] = {
+  {loader_Fail},
+  {NULL}
 };
 
 
@@ -769,16 +769,11 @@ static void require_open (lua_State *L) {
   lua_createtable(L, 0, 0);
   /* create `loaders' table */
   lua_createtable(L, sizeof(loaders)/sizeof(loaders[0]) - 1, 0);
-  /* create `path' table */
-  lua_createtable(L, sizeof(loaders)/sizeof(loaders[0]) - 1, 0);
   /* fill it with pre-defined loaders */
-  for (i = 0; loaders[i].func != NULL; ++i) {
-    lua_pushcfunction(L, loaders[i].func);
-    lua_rawseti(L, -3, i + 1);
-    lua_pushstring(L, loaders[i].name);
+  for (i = 0; loaders[i] != NULL; ++i) {
+    lua_pushcfunction(L, loaders[i]);
     lua_rawseti(L, -2, i + 1);
   }
-  lua_setfield(L, -3, "path");  /* put it in field `path' */
   lua_setfield(L, -2, "loaders");  /* put it in field `loaders' */
   /* set field `loaded' */
   luaL_findtable(L, LUA_REGISTRYINDEX, "_LOADED", 16);
