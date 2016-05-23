@@ -3,6 +3,23 @@
 
 static char err_key;
 
+// type
+// class
+// class meta
+// class meta get
+// class meta set
+// instance meta
+// instance meta get
+// instance meta set
+
+static char parent;
+static char classtable;
+static char classget;
+static char classset;
+static char instancemeta;
+static char instanceget;
+static char instanceset;
+
 static int luaEX_cfunction(lua_State *L)
 {
 	lua_CFunction fn = (lua_CFunction)lua_touserdata(L, lua_upvalueindex(1));
@@ -39,6 +56,20 @@ static int luaEX_closure(lua_State *L)
 	}
 	lua_pop(L, 1);
 	return lua_gettop(L);
+}
+
+static void gettable(lua_State *L, void *key)
+{
+	lua_pushlightuserdata(L, key);
+	lua_gettable(L, LUA_REGISTRYINDEX);
+	if (!lua_istable(L, -1))
+	{
+		lua_pop(L, 1);
+		lua_createtable(L, 0, 0);
+		lua_pushlightuserdata(L, key);
+		lua_pushvalue(L, -2);
+		lua_settable(L, LUA_REGISTRYINDEX);
+	}
 }
 
 void luaEX_pushcfunction(lua_State *L, lua_CFunction fn)
@@ -109,37 +140,6 @@ int luaEX_error(lua_State *L, const char *msg, int len)
 	if (len >= 0)
 		lua_pushlstring(L, msg, len);
 	return 1;
-}
-
-// type
-// class
-// class meta
-// class meta get
-// class meta set
-// instance meta
-// instance meta get
-// instance meta set
-
-static char parent;
-static char classtable;
-static char classget;
-static char classset;
-static char instancemeta;
-static char instanceget;
-static char instanceset;
-
-static void gettable(lua_State *L, void *key)
-{
-	lua_pushlightuserdata(L, key);
-	lua_gettable(L, LUA_REGISTRYINDEX);
-	if (!lua_istable(L, -1))
-	{
-		lua_pop(L, 1);
-		lua_createtable(L, 0, 0);
-		lua_pushlightuserdata(L, key);
-		lua_pushvalue(L, -2);
-		lua_settable(L, LUA_REGISTRYINDEX);
-	}
 }
 
 static int class_get(lua_State *L)
